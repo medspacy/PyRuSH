@@ -57,6 +57,7 @@ jobs:
     - name: tests
       run: |                            
         # ls /opt/hostedtoolcache/Python/3*/x64/lib/python*/site-packages/conf
+        pip install pytest
         python -c "import shutil;shutil.rmtree('PyRuSH')"
         python -c "import shutil;shutil.rmtree('conf')"
         ls
