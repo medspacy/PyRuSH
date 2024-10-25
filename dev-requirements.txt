@@ -1,4 +1,5 @@
-spacy>=3.0.0
+spacy<3.8; python_version < "3.12"
+spacy>=3.8; python_version >= "3.12"
 PyFastNER>=1.0.8
 pytest
 quicksectx>=0.3.5
