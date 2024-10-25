@@ -53,7 +53,7 @@ jobs:
       - name:  pytests
         run: |
           python --version
-          pip install  --no-deps ./
+          pip install ./
           pytest tests
 
 
