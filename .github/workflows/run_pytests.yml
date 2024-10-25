@@ -54,6 +54,7 @@ jobs:
       - name:  pytests
         run: |
           python --version
+          python -c "import numpy;print(numpy.__version__)"
           python setup.py build_ext --inplace
           pip install ./
           pytest tests
