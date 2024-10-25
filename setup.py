@@ -13,12 +13,12 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 
-# def parse_requirements(filename):
-#     """ load requirements from a pip requirements file """
-#     lineiter = (line.strip() for line in open(filename))
-#     return [line.split("#")[0].strip() for line in lineiter if line and not line.startswith("#")]
+def parse_requirements(filename):
+    """ load requirements from a pip requirements file """
+    lineiter = (line.strip() for line in open(filename))
+    return [line.split("#")[0].strip() for line in lineiter if line and not line.startswith("#")]
 
-# print(parse_requirements('requirements.txt'))
+print(parse_requirements('requirements.txt'))
 
 def get_version():
     """Load the version from version.py, without importing it.
@@ -83,7 +83,7 @@ setup(
     license='Apache License',
     zip_safe=False,
     include_package_data=True,
-    # install_requires=parse_requirements('requirements.txt'),
+    install_requires=parse_requirements('requirements.txt'),
     ext_modules=cythonize(extensions, compiler_directives=COMPILER_DIRECTIVES),
     tests_require='pytest',
     package_data={'': ['*.pyx', '*.pxd', '*.so', '*.dll', '*.lib', '*.cpp', '*.c','../conf/rush_rules.tsv','../requirements.txt']},
