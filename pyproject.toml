@@ -2,9 +2,11 @@
 requires = ["setuptools", 'Cython',"wheel"]
 build-backend = "setuptools.build_meta"
 
+
 [project]
 name = "PyRuSH"
 dynamic = ["dependencies","readme","version"]
+keywords = ['PyRuSH', 'NLP', 'sentenczier','sentence segmentation']
 authors = [{name = "Jianlin", email="jianlinshi.cn@gmail.com"}]
 description = '''PyRuSH is the python implementation of RuSH (Rule-based sentence Segmenter using Hashing), which is originally developed using Java. RuSH is an efficient, reliable, and easy adaptable rule-based sentence segmentation solution. It is specifically designed to handle the telegraphic written text in clinical note. It leverages a nested hash table to execute simultaneous rule processing, which reduces the impact of the rule-base growth on execution time and eliminates the effect of rule order on accuracy.
 If you wish to cite RuSH in a publication, please use:
