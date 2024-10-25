@@ -1,2 +1,27 @@
 [build-system]
-requires = ["setuptools", "wheel", 'Cython>=0.25,<3.0', 'numpy>=1.10', "spacy>=3.0.0", "cymem", "preshed","quicksectx>=0.3.5","PyFastNER>=1.0.8"]
+requires = ["setuptools>=61.0.0", 'Cython',"wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyRuSH"
+dynamic = ["dependencies","readme","version"]
+authors = [{name = "Jianlin", email="jianlinshi.cn@gmail.com"}]
+description = '''PyRuSH is the python implementation of RuSH (Rule-based sentence Segmenter using Hashing), which is originally developed using Java. RuSH is an efficient, reliable, and easy adaptable rule-based sentence segmentation solution. It is specifically designed to handle the telegraphic written text in clinical note. It leverages a nested hash table to execute simultaneous rule processing, which reduces the impact of the rule-base growth on execution time and eliminates the effect of rule order on accuracy.
+If you wish to cite RuSH in a publication, please use:
+
+Jianlin Shi ; Danielle Mowery ; Kristina M. Doing-Harris ; John F. Hurdle.RuSH: a Rule-based Segmentation Tool Using Hashing for Extremely Accurate Sentence Segmentation of Clinical Text. AMIA Annu Symp Proc. 2016: 1587.
+'''
+requires-python = ">=3.6"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+readme={file = ['README.rst']}
+version = {attr = "PyRuSH.__version__" }
+
+[project.urls]
+Source = "https://github.com/jianlins/PyRuSH"
