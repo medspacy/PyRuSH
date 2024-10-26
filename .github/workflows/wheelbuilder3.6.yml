@@ -46,7 +46,7 @@ jobs:
           CIBW_BEFORE_BUILD: pip install Cython & pip install -r requirements.txt & pip install urllib3==1.26.14
           CIBW_BUILD: ${{ matrix.python }}-*
           CIBW_ENVIRONMENT: CFLAGS='-O3 -g0 -mtune=generic -pipe -fPIC' LDFLAGS='-fPIC'
-          CIBW_BEFORE_TEST: pip install Cython & pip install -r dev-requirements.txt & pip install urllib3==1.26.14
+          CIBW_BEFORE_TEST: pip install Cython & pip install -r dev-requirements.txt & pip install pytest & pip install urllib3==1.26.14
           CIBW_TEST_COMMAND: pytest {package}/tests
 
       - name: check build
