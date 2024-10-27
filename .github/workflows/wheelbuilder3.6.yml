@@ -43,8 +43,8 @@ jobs:
           # so there is no way to pass this in directly.
           # This would require modifying cython's setup.py to look for these flags
           # in env vars.
-          CIBW_BEFORE_BUILD: pip install Cython & pip install -r requirements.txt & pip install urllib3==1.26.14 pytest
-          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
+          CIBW_BEFORE_BUILD: pip install Cython; pip install -r requirements.txt; pip install urllib3==1.26.14; cd PyRuSH; python setup.py build_ext --inplace
+          CIBW_BUILD: ${{ matrix.python }}-*
           CIBW_ARCHS_MACOS: universal2
           CIBW_TEST_REQUIRES: pytest spacy>=3.0.0
           CIBW_TEST_COMMAND: pytest {project}/tests
