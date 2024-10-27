@@ -1,4 +1,4 @@
-name: pip_install_unitest
+name: pip_old_install_unitest
 on:
   workflow_dispatch:
     inputs:
