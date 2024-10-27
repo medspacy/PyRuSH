@@ -1,0 +1,68 @@
+name: pip_install_unitest
+on:
+  workflow_dispatch:
+    inputs:
+      install_prerelease:
+        description: 'Check this to install the prerelease version of medspacy if available and the version is newer than formal release.'  
+        type: boolean   
+        required: false
+        default: false
+
+
+jobs:
+
+  test:  
+    # TODO: Do we care if this only runs on allowed branches since we check push/pull_request above?
+    # if: github.ref == 'refs/heads/master' OR github.ref == 'refs/heads/develop'
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-latest, windows-latest]
+        # python-version: [3.8]
+        python-version: [3.6,3.7]
+        # revised from https://github.com/actions/cache/blob/main/examples.md#python---pip
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Git clone repo and remove source code
+      run: |
+        pwd
+        ls
+
+    - name: Set up pip
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}   
+        cache: 'pip'   
+        cache-dependency-path: |
+          'requirements/requirements.txt'
+    - run: |
+        python --version
+        pip install --upgrade pip
+    
+    
+    - name: Install prereleased PyRuSH
+      if: ${{ github.event.inputs.install_prerelease == 'true' }} 
+      run: |
+        # use this to avoid install prereleases of dependencies packages
+        pip install -r requirements.txt
+        pip install --pre PyRuSH
+
+    - name: Install formal released medspacy
+      if: ${{ github.event.inputs.install_prerelease == 'false' }}  
+      run: |
+        pip install PyRuSH
+
+
+    - name: tests
+      run: |                            
+        # ls /opt/hostedtoolcache/Python/3*/x64/lib/python*/site-packages/conf
+        pip install pytest
+        python -c "import shutil;shutil.rmtree('PyRuSH')"
+        python -c "import shutil;shutil.rmtree('conf')"
+        ls
+        python --version
+        pytest
+
+
+  
