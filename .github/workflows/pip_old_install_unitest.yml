@@ -16,7 +16,7 @@ jobs:
     # if: github.ref == 'refs/heads/master' OR github.ref == 'refs/heads/develop'
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest, windows-latest]
+        os: [ubuntu-20.04, macos-12, windows-latest]
         # python-version: [3.8]
         python-version: [3.6,3.7]
         # revised from https://github.com/actions/cache/blob/main/examples.md#python---pip
