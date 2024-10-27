@@ -1,4 +1,4 @@
-name: Build_Pub>=3.9
+name: Build_Pub<3.9
 on:
   workflow_dispatch
 
