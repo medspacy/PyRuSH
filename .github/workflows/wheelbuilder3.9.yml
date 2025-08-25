@@ -38,7 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip --break-system-packages
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
