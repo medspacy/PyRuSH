@@ -19,13 +19,13 @@ from spacy import Language
 from spacy.pipeline import Sentencizer
 
 from .RuSH import RuSH
-from .StaticSentencizerFun import cpredict, cset_annotations
+from .StaticSentencizerFun import cpredict_merge_gaps,cpredict_split_gaps, cset_annotations
 
 
 @Language.factory("medspacy_pyrush")
 class PyRuSHSentencizer(Sentencizer):
     def __init__(self, nlp: Language, name: str = "medspacy_pyrush", rules_path: str = '', max_repeat: int = 50,
-                 auto_fix_gaps: bool = True) -> Sentencizer:
+                 auto_fix_gaps: bool = True, merge_gaps: bool = False) -> Sentencizer:
         """
 
         @param rules_path: The string of the rule file path or rules themselves. By default, it will look for
@@ -33,7 +33,8 @@ class PyRuSHSentencizer(Sentencizer):
         @param max_repeat: Total number of replicates that allows to be handled by "+" wildcard.
         @param auto_fix_gaps: If gaps are caused by malcrafted rules, try to fix them.
             However, this has no control of sentence end,
-             TODO: need to see how the downsteam spacy components make use of doc.c
+        @param merge_gaps: When True, gaps between sentences are merged into the preceding sentence.
+            When False, gaps are split into separate sentences.
         """
         self.nlp = nlp
         self.name = name
@@ -43,6 +44,7 @@ class PyRuSHSentencizer(Sentencizer):
             rules_path = str(os.path.join(root, 'conf', 'rush_rules.tsv'))
         self.rules_path = rules_path
         self.rush = RuSH(rules=rules_path, max_repeat=max_repeat, auto_fix_gaps=auto_fix_gaps)
+        self.merge_gaps = merge_gaps
 
     @classmethod
     def from_nlp(cls, nlp, **cfg):
@@ -57,7 +59,11 @@ class PyRuSHSentencizer(Sentencizer):
         """Apply the pipeline's model to a batch of docs, without
         modifying them.
         """
-        guesses = cpredict(docs, self.rush.segToSentenceSpans)
+        if self.merge_gaps:
+            from .StaticSentencizerFun import cpredict_ww
+            guesses = cpredict_merge_gaps(docs, self.rush.segToSentenceSpans)
+        else:
+            guesses = cpredict_split_gaps(docs, self.rush.segToSentenceSpans)
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids, tensors=None):

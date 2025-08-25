@@ -15,7 +15,7 @@
 #  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 #  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
-cpdef cpredict(docs, sentencizer_fun):
+cpdef cpredict_merge_gaps(docs, sentencizer_fun):
     cdef list guesses
     cdef int s
     cdef int t
@@ -42,6 +42,61 @@ cpdef cpredict(docs, sentencizer_fun):
                 t += 1
             else:
                 s += 1
+        guesses.append(doc_guesses)
+    return guesses
+
+cpdef cpredict_split_gaps(docs, sentencizer_fun):
+    cdef list guesses
+    cdef int s
+    cdef int t
+    cdef int last_span_end
+    guesses = []
+    for doc in docs:
+        if len(doc) == 0:
+            guesses.append([])
+            continue
+        doc_guesses = [False] * len(doc)
+        sentence_spans = sentencizer_fun(doc.text)
+        s = 0
+        t = 0
+        last_span_end = -1  # Track the end of the last span
+        
+        prev_span_end = None
+        while t < len(doc):
+            token = doc[t]
+            # Check for gap between previous span and current span
+            if s < len(sentence_spans):
+                span = sentence_spans[s]
+                # If there is a gap between previous span and current span
+                if prev_span_end is not None and span.begin >= prev_span_end:
+                    # Always mark the first token after prev_span_end, even if whitespace
+                    for gap_t in range(t, len(doc)):
+                        gap_token = doc[gap_t]
+                        if gap_token.idx >= prev_span_end:
+                            doc_guesses[gap_t] = True
+                            t = gap_t
+                            break
+                    prev_span_end = None
+                    continue
+                # Mark the first token of the span
+                if token.idx <= span.begin < token.idx + len(token):
+                    doc_guesses[t] = True
+                    prev_span_end = span.end
+                    t += 1
+                    s += 1
+                elif token.idx + len(token) <= span.begin:
+                    t += 1
+                else:
+                    prev_span_end = span.end
+                    s += 1
+            else:
+                # After all spans, handle any trailing tokens after last span
+                if prev_span_end is not None and token.idx > prev_span_end:
+                    doc_guesses[t] = True
+                    prev_span_end = None
+                    t += 1
+                    continue
+                t += 1
         guesses.append(doc_guesses)
     return guesses
 
