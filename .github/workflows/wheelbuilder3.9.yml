@@ -109,7 +109,7 @@ jobs:
 
       - name: check downloaded
         run: |
-          mv ./dist/**/PyRuSH* ./dist/
+          find ./dist -type f \( -name "*.whl" -o -name "*.tar.gz" \) -exec mv {} ./dist/ \;
           rm -rf dist/cp*
           rm -rf dist/sdist
           ls -R
