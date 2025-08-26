@@ -78,7 +78,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Text Processing :: Linguistic",
     ],
-    license='MIT License',
+    license='MIT',
     zip_safe=False,
     include_package_data=True,
     # install_requires=parse_requirements('requirements.txt'),

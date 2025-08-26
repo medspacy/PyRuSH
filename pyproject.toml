@@ -14,13 +14,11 @@ If you wish to cite RuSH in a publication, please use:
 Jianlin Shi ; Danielle Mowery ; Kristina M. Doing-Harris ; John F. Hurdle.RuSH: a Rule-based Segmentation Tool Using Hashing for Extremely Accurate Sentence Segmentation of Clinical Text. AMIA Annu Symp Proc. 2016: 1587.
 '''
 requires-python = ">=3.6"
-license = "MIT"
-license-files = [
-    "LICENSE*"
-]
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
+license = "MIT"
+license-files = ["LICENSE"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
