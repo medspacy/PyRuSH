@@ -6,3 +6,4 @@ PyFastNER>=1.0.8
 quicksectx>=0.3.5
 pytest
 numpy
+wheel
