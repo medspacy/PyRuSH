@@ -24,7 +24,7 @@ jobs:
         # https://github.com/github/feedback/discussions/7835#discussioncomment-1769026
         buildplat:
         - [ubuntu-latest, manylinux_x86_64]
-        # - [ubuntu-latest, musllinux_x86_64]
+        - [ubuntu-latest, musllinux_x86_64]
         - [macos-13, macosx_x86_64]
         - [macos-latest, macosx_arm64]
         - [windows-latest, win_amd64]
