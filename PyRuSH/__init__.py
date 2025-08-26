@@ -30,7 +30,7 @@
 
 from .PyRuSHSentencizer import PyRuSHSentencizer
 from .RuSH import RuSH, BEGIN, END
-__version__ = '1.0.10dev'
+__version__ = '1.0.10'
 
 
 
