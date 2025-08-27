@@ -1,3 +1,4 @@
+from loguru import logger
 # ******************************************************************************
 #  MIT License
 #
@@ -15,33 +16,56 @@
 #  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 #  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
-cpdef cpredict_merge_gaps(docs, sentencizer_fun):
+cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
     cdef list guesses
-    cdef int s
-    cdef int t
     guesses = []
-    for doc in docs:
+    logger.debug(f"cpredict_merge_gaps called: docs={len(docs)}, max_sentence_length={max_sentence_length}")
+    for doc_idx, doc in enumerate(docs):
         if len(doc) == 0:
             guesses.append([])
             continue
         doc_guesses = [False] * len(doc)
-        sentence_spans = sentencizer_fun(doc.text)
-        s = 0
+        orig_spans = sentencizer_fun(doc.text)
+        logger.debug(f"[doc {doc_idx}] {len(orig_spans)} spans detected: {[ (span.begin, span.end) for span in orig_spans ]}")
         t = 0
-        while s < len(sentence_spans) and t < len(doc):
-            span = sentence_spans[s]
+        s = 0
+        sentence_start_t = None
+        sentence_start_idx = None
+        sentence_len = 0
+        marked_this_span = False
+        while t < len(doc):
             token = doc[t]
+            # Advance to next span if needed
+            while s < len(orig_spans) and token.idx >= orig_spans[s].end:
+                s += 1
+                marked_this_span = False
+            if s >= len(orig_spans):
+                break
+            span = orig_spans[s]
+            # Only process tokens within the span
+            if token.idx < span.begin or token.idx >= span.end:
+                t += 1
+                continue
             if len(token.text.strip()) == 0:
                 t += 1
                 continue
-            if token.idx <= span.begin < token.idx + len(token):
+            # Mark the first non-whitespace token of the span as sentence start
+            if not marked_this_span:
                 doc_guesses[t] = True
-                t += 1
-                s += 1
-            elif token.idx + len(token) <= span.begin:
-                t += 1
-            else:
-                s += 1
+                logger.debug(f"[doc {doc_idx}] Mark sentence start at token {t}: '{token.text}' idx={token.idx} (span start)")
+                sentence_start_t = t
+                sentence_start_idx = token.idx
+                sentence_len = 0
+                marked_this_span = True
+            sentence_len = token.idx + len(token.text) - sentence_start_idx
+            if max_sentence_length is not None and sentence_len > max_sentence_length:
+                doc_guesses[t] = True
+                logger.debug(f"[doc {doc_idx}] Split due to max_sentence_length at token {t}: '{token.text}' idx={token.idx}")
+                sentence_start_t = t
+                sentence_start_idx = token.idx
+                sentence_len = 0
+            t += 1
+        logger.debug(f"[doc {doc_idx}] Sentence start guesses: {[i for i, v in enumerate(doc_guesses) if v]}")
         guesses.append(doc_guesses)
     return guesses
 
