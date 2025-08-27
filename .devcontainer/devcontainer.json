@@ -1,4 +1,4 @@
 {
 	"image": "condaforge/miniforge3",
-	"postCreateCommand": "pip install -r dev-requirements.txt"
+	"postCreateCommand": "apt-get update && apt-get install -y build-essential && pip install -U -r dev-requirements.txt"
 }
