@@ -55,7 +55,7 @@ cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
                 logger.debug(f"[doc {doc_idx}] Mark sentence start at token {t}: '{token.text}' idx={token.idx} (span start)")
                 sentence_start_t = t
                 sentence_start_idx = token.idx
-                sentence_len = 0
+                sentence_len = len(token.text)
                 marked_this_span = True
             sentence_len = token.idx + len(token.text) - sentence_start_idx
             if max_sentence_length is not None and sentence_len > max_sentence_length:
@@ -63,7 +63,7 @@ cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
                 logger.debug(f"[doc {doc_idx}] Split due to max_sentence_length at token {t}: '{token.text}' idx={token.idx}")
                 sentence_start_t = t
                 sentence_start_idx = token.idx
-                sentence_len = 0
+                sentence_len = len(token.text)
             t += 1
         logger.debug(f"[doc {doc_idx}] Sentence start guesses: {[i for i, v in enumerate(doc_guesses) if v]}")
         guesses.append(doc_guesses)

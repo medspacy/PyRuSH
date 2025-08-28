@@ -95,7 +95,6 @@ class PyRuSHSentencizer(Sentencizer):
             - Does not modify the Docs; only returns sentence start predictions.
         """
         if self.merge_gaps:
-            from .StaticSentencizerFun import cpredict_ww
             guesses = cpredict_merge_gaps(docs, self.rush.segToSentenceSpans, self.max_sentence_length)
         else:
             guesses = cpredict_split_gaps(docs, self.rush.segToSentenceSpans, self.max_sentence_length)
