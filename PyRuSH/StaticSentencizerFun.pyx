@@ -69,13 +69,13 @@ cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
         guesses.append(doc_guesses)
     return guesses
 
-cpdef cpredict_split_gaps(docs, sentencizer_fun):
+cpdef cpredict_split_gaps(docs, sentencizer_fun, max_sentence_length=None):
     cdef list guesses
     cdef int s
     cdef int t
     cdef int last_span_end
     guesses = []
-    for doc in docs:
+    for doc_idx, doc in enumerate(docs):
         if len(doc) == 0:
             guesses.append([])
             continue
@@ -84,43 +84,69 @@ cpdef cpredict_split_gaps(docs, sentencizer_fun):
         s = 0
         t = 0
         last_span_end = -1  # Track the end of the last span
-        
         prev_span_end = None
+        sentence_start_t = None
+        sentence_start_idx = None
+        sentence_len = 0
+        marked_this_span = False
         while t < len(doc):
             token = doc[t]
             # Check for gap between previous span and current span
             if s < len(sentence_spans):
                 span = sentence_spans[s]
+                span_begin = span[0]
+                span_end = span[1]
                 # If there is a gap between previous span and current span
-                if prev_span_end is not None and span.begin >= prev_span_end:
+                if prev_span_end is not None and span_begin >= prev_span_end:
                     # Always mark the first token after prev_span_end, even if whitespace
                     for gap_t in range(t, len(doc)):
                         gap_token = doc[gap_t]
                         if gap_token.idx >= prev_span_end:
                             doc_guesses[gap_t] = True
                             t = gap_t
+                            # Reset sentence tracking for new sentence
+                            sentence_start_t = gap_t
+                            sentence_start_idx = gap_token.idx
+                            sentence_len = 0
                             break
                     prev_span_end = None
                     continue
                 # Mark the first token of the span
-                if token.idx <= span.begin < token.idx + len(token):
+                if token.idx <= span_begin < token.idx + len(token):
                     doc_guesses[t] = True
-                    prev_span_end = span.end
+                    prev_span_end = span_end
+                    sentence_start_t = t
+                    sentence_start_idx = token.idx
+                    sentence_len = 0
                     t += 1
                     s += 1
-                elif token.idx + len(token) <= span.begin:
+                    continue
+                elif token.idx + len(token) <= span_begin:
                     t += 1
+                    continue
                 else:
-                    prev_span_end = span.end
+                    prev_span_end = span_end
                     s += 1
+                    continue
             else:
                 # After all spans, handle any trailing tokens after last span
                 if prev_span_end is not None and token.idx > prev_span_end:
                     doc_guesses[t] = True
                     prev_span_end = None
+                    sentence_start_t = t
+                    sentence_start_idx = token.idx
+                    sentence_len = 0
                     t += 1
                     continue
-                t += 1
+            # Sentence length logic
+            if sentence_start_idx is not None:
+                sentence_len = token.idx + len(token.text) - sentence_start_idx
+                if max_sentence_length is not None and sentence_len > max_sentence_length:
+                    doc_guesses[t] = True
+                    sentence_start_t = t
+                    sentence_start_idx = token.idx
+                    sentence_len = 0
+            t += 1
         guesses.append(doc_guesses)
     return guesses
 
