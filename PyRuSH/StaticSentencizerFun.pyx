@@ -89,13 +89,14 @@ cpdef cpredict_split_gaps(docs, sentencizer_fun, max_sentence_length=None):
         sentence_start_idx = None
         sentence_len = 0
         marked_this_span = False
+
         while t < len(doc):
             token = doc[t]
             # Check for gap between previous span and current span
             if s < len(sentence_spans):
                 span = sentence_spans[s]
-                span_begin = span[0]
-                span_end = span[1]
+                span_begin = span.begin
+                span_end = span.end
                 # If there is a gap between previous span and current span
                 if prev_span_end is not None and span_begin >= prev_span_end:
                     # Always mark the first token after prev_span_end, even if whitespace

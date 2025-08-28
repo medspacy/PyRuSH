@@ -1,7 +1,9 @@
+
 import pytest
 from PyRuSH.StaticSentencizerFun import cpredict_split_gaps
 import spacy
 from loguru import logger
+from PyFastNER import Span
 nlp = spacy.blank("en")
 
 
@@ -11,10 +13,10 @@ def dummy_sentencizer_fun(text):
     start = 0
     for i, c in enumerate(text):
         if c == ".":
-            spans.append((start, i+1))
+            spans.append(Span(start, i+1))
             start = i+1
     if start < len(text):
-        spans.append((start, len(text)))
+        spans.append(Span(start, len(text)))
     return spans
 
 def make_doc_from_text(text):

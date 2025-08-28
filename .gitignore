@@ -8,3 +8,4 @@ dist
 *.cpp
 .ipynb_checkpoints
 __pycache__
+*.pyd
