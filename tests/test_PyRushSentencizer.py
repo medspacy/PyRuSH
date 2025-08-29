@@ -58,7 +58,7 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
             print('>' + str(sent) + '<\n\n')
 
         # New expected count includes whitespace-only sentences
-        assert (len(sents) == 50)
+        assert (len(sents) == 53)
         # For content checks, filter out whitespace-only sentences
         content_sents = [s for s in sents if s.text.strip()]
         assert (content_sents[0].text == 'Ms. ABCD is a 69-year-old lady, who was admitted to the hospital with chest pain and respiratory insufficiency.')

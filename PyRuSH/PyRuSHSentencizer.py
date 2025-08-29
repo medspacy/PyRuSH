@@ -35,7 +35,7 @@ class PyRuSHSentencizer(Sentencizer):
             rules_path (str): Path to the rule file or rules themselves. If empty, defaults to 'conf/rush_rules.tsv'.
             max_repeat (int): Maximum number of repeats allowed for the '+' wildcard in rules.
             auto_fix_gaps (bool): If True, attempts to fix gaps caused by malformed rules.
-            merge_gaps (bool): If True, merges gaps between sentences into the preceding sentence. If False, splits gaps into separate sentences.
+            merge_gaps (bool): If True, merges gaps between sentences into the preceding sentence. If False, splits gaps (might be multiple whitespaces or new line characters) into separate sentences.
             max_sentence_length (int or None): Maximum allowed sentence length in characters. If set, sentences longer than this will be split.
 
         Notes:
