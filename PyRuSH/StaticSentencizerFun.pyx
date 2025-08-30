@@ -25,45 +25,59 @@ cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
             guesses.append([])
             continue
         doc_guesses = [False] * len(doc)
-        orig_spans = sentencizer_fun(doc.text)
-        logger.debug(f"[doc {doc_idx}] {len(orig_spans)} spans detected: {[ (span.begin, span.end) for span in orig_spans ]}")
+        spans = sentencizer_fun(doc.text)
+        logger.debug(f"[doc {doc_idx}] {len(spans)} spans detected: {[ (span.begin, span.end) for span in spans ]}")
         t = 0
-        s = 0
-        sentence_start_t = None
-        sentence_start_idx = None
+        span_idx = 0
+        num_spans = len(spans)
         sentence_len = 0
-        marked_this_span = False
         while t < len(doc):
             token = doc[t]
-            # Advance to next span if needed
-            while s < len(orig_spans) and token.idx >= orig_spans[s].end:
-                s += 1
-                marked_this_span = False
-            if s >= len(orig_spans):
-                break
-            span = orig_spans[s]
-            # Only process tokens within the span
-            if token.idx < span.begin or token.idx >= span.end:
-                t += 1
-                continue
-            if len(token.text.strip()) == 0:
-                t += 1
-                continue
-            # Mark the first non-whitespace token of the span as sentence start
-            if not marked_this_span:
+            # 1. Mark token as sentence start if it overlaps with RuSH span.begin
+            if span_idx < num_spans and token.idx == spans[span_idx].begin:
                 doc_guesses[t] = True
-                logger.debug(f"[doc {doc_idx}] Mark sentence start at token {t}: '{token.text}' idx={token.idx} (span start)")
-                sentence_start_t = t
-                sentence_start_idx = token.idx
+                logger.debug(f"[doc {doc_idx}] Mark sentence start at token {t}: '{token.text}' idx={token.idx} (span begin)")
                 sentence_len = len(token.text)
-                marked_this_span = True
-            sentence_len = token.idx + len(token.text) - sentence_start_idx
-            if max_sentence_length is not None and sentence_len > max_sentence_length:
+                span_idx += 1
+                t += 1
+                continue
+            # 2. If token is in gap between spans
+            if span_idx > 0 and token.idx >= spans[span_idx-1].end and (span_idx < num_spans and token.idx < spans[span_idx].begin):
+                # Mark first whitespace token in gap
+                gap_start = t
+                gap_end = t
+                # Find end of gap
+                while gap_end < len(doc) and doc[gap_end].idx < spans[span_idx].begin:
+                    gap_end += 1
+                # Mark first whitespace token
+                whitespace_found = False
+                for i in range(gap_start, gap_end):
+                    if doc[i].text.isspace():
+                        doc_guesses[i] = True
+                        logger.debug(f"[doc {doc_idx}] Mark sentence start at token {i}: '{doc[i].text}' idx={doc[i].idx} (gap whitespace)")
+                        whitespace_found = True
+                        # Mark first non-whitespace token after whitespace
+                        if i+1 < gap_end and not doc[i+1].text.isspace():
+                            doc_guesses[i+1] = True
+                            logger.debug(f"[doc {doc_idx}] Mark sentence start at token {i+1}: '{doc[i+1].text}' idx={doc[i+1].idx} (gap non-whitespace after whitespace)")
+                        break
+                # If no whitespace, mark first non-whitespace token
+                if not whitespace_found:
+                    for i in range(gap_start, gap_end):
+                        if not doc[i].text.isspace():
+                            doc_guesses[i] = True
+                            logger.debug(f"[doc {doc_idx}] Mark sentence start at token {i}: '{doc[i].text}' idx={doc[i].idx} (gap non-whitespace)")
+                            break
+                t = gap_end
+                continue
+            # 3. If sentence length exceeds max_sentence_length, mark as sentence start
+            if max_sentence_length is not None and sentence_len + len(token.text) > max_sentence_length:
                 doc_guesses[t] = True
                 logger.debug(f"[doc {doc_idx}] Mark/Split due to max_sentence_length at token {t}: '{token.text}' idx={token.idx}")
-                sentence_start_t = t
-                sentence_start_idx = token.idx
                 sentence_len = len(token.text)
+                t += 1
+                continue
+            sentence_len += len(token.text)
             t += 1
         logger.debug(f"[doc {doc_idx}] Sentence start guesses: {[i for i, v in enumerate(doc_guesses) if v]}")
         guesses.append(doc_guesses)
@@ -83,19 +97,48 @@ cpdef cpredict_split_gaps(docs, sentencizer_fun, max_sentence_length=None):
         num_spans = len(sentence_spans)
         t = 0
         span_idx = 0
-        sentence_len = 0
+        sentence_start_idx = 0
         is_first_token_in_span = True
-        next_span_begin = sentence_spans[span_idx + 1].begin if num_spans > 1 else -1
         while t < len(doc):
             token = doc[t]
             # Advance to next span if needed
+            # Always check for gaps between spans before advancing span_idx
+            next_span_begin = sentence_spans[span_idx + 1].begin if span_idx < num_spans - 1 else -1
+            if span_idx < num_spans - 1 and token.idx >= sentence_spans[span_idx].end and token.idx < next_span_begin:
+                gap_start = t
+                gap_end = t
+                # Find end of gap
+                while gap_end < len(doc) and doc[gap_end].idx < next_span_begin:
+                    gap_end += 1
+                logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] GAP DETECTED: tokens {gap_start}-{gap_end-1} (idx {doc[gap_start].idx}-{doc[gap_end-1].idx}) between spans {sentence_spans[span_idx].end}-{next_span_begin}")
+                for i in range(gap_start, gap_end):
+                    logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] GAP token {i}: '{doc[i].text}' idx={doc[i].idx} isspace={doc[i].text.isspace()}")
+                # Mark first token in gap as sentence start (should match expected: whitespace preferred, else first token)
+                if gap_start < gap_end:
+                    whitespace_idx = -1
+                    for i in range(gap_start, gap_end):
+                        if doc[i].text.isspace():
+                            whitespace_idx = i
+                            break
+                    if whitespace_idx != -1:
+                        doc_guesses[whitespace_idx] = True
+                        logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {whitespace_idx} '{doc[whitespace_idx].text}' marked as sentence start (whitespace in gap between spans)")
+                        # If next token is non-whitespace, mark it too
+                        # Mark first non-whitespace token after whitespace as sentence start (only if gap contains exactly two tokens)
+                        if gap_end - gap_start == 2 and whitespace_idx + 1 < gap_end and not doc[whitespace_idx + 1].text.isspace():
+                            doc_guesses[whitespace_idx + 1] = True
+                            logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {whitespace_idx + 1} '{doc[whitespace_idx + 1].text}' marked as sentence start (non-whitespace after whitespace in gap)")
+                    else:
+                        doc_guesses[gap_start] = True
+                        logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {gap_start} '{doc[gap_start].text}' marked as sentence start (first token in gap between spans)")
+                t = gap_end
+                continue
             while span_idx < num_spans and token.idx >= sentence_spans[span_idx].end:
                 span_idx += 1
                 is_first_token_in_span = True
-                next_span_begin = sentence_spans[span_idx + 1].begin if span_idx < num_spans - 1 else -1
             if span_idx >= num_spans:
                 # After all spans, only mark whitespace tokens as sentence start
-                if len(token.text.strip()) == 0:
+                if token.text.isspace():
                     doc_guesses[t] = True
                     logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {t} '{token.text}' marked as sentence start (whitespace after all spans)")
                 t += 1
@@ -107,31 +150,51 @@ cpdef cpredict_split_gaps(docs, sentencizer_fun, max_sentence_length=None):
                 continue
             # If in the span
             if token.idx < span.end:
-                if is_first_token_in_span:
+                # 1. Mark sentence start if token overlaps with span.begin
+                if token.idx == span.begin:
                     doc_guesses[t] = True
                     is_first_token_in_span = False
-                    sentence_len = len(token.text)
-                    logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {t} '{token.text}' marked as sentence start (span {span_idx})")
-                elif max_sentence_length is not None and sentence_len + len(token.text) > max_sentence_length:
+                    sentence_start_idx = token.idx
+                    logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {t} '{token.text}' marked as sentence start (span begin)")
+                # 2. If sentence length exceeds max_sentence_length, mark as sentence start
+                elif max_sentence_length is not None and (token.idx - sentence_start_idx) + len(token.text) > max_sentence_length:
                     doc_guesses[t] = True
-                    sentence_len = len(token.text)
+                    sentence_start_idx = token.idx
                     logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {t} '{token.text}' marked as sentence start (max length split in span {span_idx})")
-                else:
-                    sentence_len += len(token.text)
-                # If we just split, don't add token to sentence_len again
+                logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {t} '{token.text}' sentence_len={(token.idx - sentence_start_idx) + len(token.text)} (after update)")
                 t += 1
                 continue
-            # After the span, before next span, mark whitespace tokens
-            if next_span_begin != -1 and token.idx < next_span_begin:
-                if len(token.text.strip()) == 0:
-                    doc_guesses[t] = True
-                    logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {t} '{token.text}' marked as sentence start (whitespace after span {span_idx})")
-                    t += 1
-                    continue
-                else:
-                    t += 1
-                    continue
-            # If no next span, just move on
+            # 3. If between two adjacent spans, mark the first token (even whitespace) as sent_start
+            next_span_begin = sentence_spans[span_idx + 1].begin if span_idx < num_spans - 1 else -1
+            if next_span_begin != -1 and token.idx >= span.end and token.idx < next_span_begin:
+                gap_start = t
+                gap_end = t
+                # Find end of gap
+                while gap_end < len(doc) and doc[gap_end].idx < next_span_begin:
+                    gap_end += 1
+                logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] GAP DETECTED: tokens {gap_start}-{gap_end-1} (idx {doc[gap_start].idx}-{doc[gap_end-1].idx}) between spans {span.end}-{next_span_begin}")
+                for i in range(gap_start, gap_end):
+                    logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] GAP token {i}: '{doc[i].text}' idx={doc[i].idx} isspace={doc[i].text.isspace()}")
+                # Mark first token in gap as sentence start (should match expected: whitespace preferred, else first token)
+                if gap_start < gap_end:
+                    whitespace_idx = -1
+                    for i in range(gap_start, gap_end):
+                        if doc[i].text.isspace():
+                            whitespace_idx = i
+                            break
+                    if whitespace_idx != -1:
+                        doc_guesses[whitespace_idx] = True
+                        logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {whitespace_idx} '{doc[whitespace_idx].text}' marked as sentence start (whitespace in gap between spans)")
+                        # If next token is non-whitespace, mark it too
+                        # Mark first non-whitespace token after whitespace as sentence start (only if gap contains exactly two tokens)
+                        if gap_end - gap_start == 2 and whitespace_idx + 1 < gap_end and not doc[whitespace_idx + 1].text.isspace():
+                            doc_guesses[whitespace_idx + 1] = True
+                            logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {whitespace_idx + 1} '{doc[whitespace_idx + 1].text}' marked as sentence start (non-whitespace after whitespace in gap)")
+                    else:
+                        doc_guesses[gap_start] = True
+                        logger.debug(f"[cpredict_split_gaps|call_id={call_id}] [doc {doc_idx}] Token {gap_start} '{doc[gap_start].text}' marked as sentence start (first token in gap between spans)")
+                t = gap_end
+                continue
             t += 1
         logger.debug(f'[cpredict_split_gaps|call_id={call_id}] Token/tag mapping: ' + str([(d, l) for d, l in zip(list(doc), doc_guesses)]))
         guesses.append(doc_guesses)
