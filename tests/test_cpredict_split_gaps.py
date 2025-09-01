@@ -60,7 +60,7 @@ def test_split_gaps_non_ascii():
     for idx, start in enumerate(starts):
         end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
         sentences.append(" ".join([doc[i].text for i in range(start, end)]))
-    logger.info(f"[test_split_gaps_non_ascii] Split sentences: {sentences}")
+    logger.debug(f"[test_split_gaps_non_ascii] Split sentences: {sentences}")
     # Expect sentences to be 'Hello 世界 .' and 'World .'
     assert any("世界" in s for s in sentences)
     assert any("World" in s for s in sentences)
@@ -80,7 +80,7 @@ def test_split_gaps_basic():
     for idx, start in enumerate(starts):
         end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
         sentences.append(" ".join([doc[i].text for i in range(start, end)]))
-    logger.info(f"[test_split_gaps_basic] Split sentences: {sentences}")
+    logger.debug(f"[test_split_gaps_basic] Split sentences: {sentences}")
     assert "This is a sentence ." in sentences
     assert "This is another one ." in sentences
 
@@ -111,7 +111,7 @@ def test_split_gaps_whitespace_none():
         end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
         sentences.append(" ".join([doc[i].text for i in range(start, end)]))
     sentences = [s.strip() for s in sentences]
-    logger.info(f"[test_split_gaps_whitespace_none] Split sentences: {sentences}")
+    logger.debug(f"[test_split_gaps_whitespace_none] Split sentences: {sentences}")
     # Should have two sentences, each with a single period
     assert sentences == [".", "."]
 
@@ -124,7 +124,7 @@ def test_split_gaps_whitespace_set():
         end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
         sentences.append(" ".join([doc[i].text for i in range(start, end)]))
     sentences = [s.strip() for s in sentences]
-    logger.info(f"[test_split_gaps_whitespace_set] Split sentences: {sentences}")
+    logger.debug(f"[test_split_gaps_whitespace_set] Split sentences: {sentences}")
     assert sentences == [".", "."]
 
 def test_split_gaps_mixed_whitespace_and_text():
@@ -136,7 +136,7 @@ def test_split_gaps_mixed_whitespace_and_text():
         end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
         sentences.append(" ".join([doc[i].text for i in range(start, end)]))
     sentences = [s.strip() for s in sentences]
-    logger.info(f"[test_split_gaps_mixed_whitespace_and_text] Split sentences: {sentences}")
+    logger.debug(f"[test_split_gaps_mixed_whitespace_and_text] Split sentences: {sentences}")
     # Should have sentences: '.', 'Hello .', 'World .'
     assert "." in sentences
     assert "Hello ." in sentences

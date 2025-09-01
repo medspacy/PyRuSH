@@ -71,14 +71,14 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
     We discovered new T-wave abnormalities on her EKG.  There was of course a four-vessel bypass surgery in 2001.  We did a coronary angiogram. 
     
     '''
-        from PyRuSH.RuSH import initLogger
-        initLogger()
+        from loguru import logger
+        logger.add(sys.stdout, level="DEBUG")
         nlp = English()
         nlp.add_pipe("medspacy_pyrush")
         doc = nlp(input_str)
         sents = [s for s in doc.sents]
         for sent in sents:
-            print('>' + str(sent) + '<\n\n')
+            logger.debug('>' + str(sent) + '<\n\n')
 
         # SpaCy has no control of sentence end. Thus, it ends up with sloppy ends.
         assert (sents[1].text == 'Ms. ABCD is a 69-year-old lady, who was admitted to the hospital with'
@@ -92,18 +92,18 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
     We discovered new T-wave abnormalities on her EKG.  There was of course a four-vessel bypass surgery in 2001.  We did a coronary angiogram. 
 
     '''
-        from PyRuSH.RuSH import initLogger
-        initLogger()
+        from loguru import logger
+        logger.add(sys.stdout, level="DEBUG")
         from PyRuSH import RuSH
         pwd = os.path.dirname(os.path.abspath(__file__))
         rush = RuSH(str(os.path.join(pwd, 'rush_rules.tsv')), enable_logger=True)
         sentences = rush.segToSentenceSpans(input_str)
         # for i in range(0, len(sentences)):
         #     sentence = sentences[i]
-        #     print('assert (sentences[' + str(i) + '].begin == ' + str(sentence.begin) + ' and sentences[' + str(
-        #         i) + '].end == ' + str(sentence.end) + ')')
+        #     logger.debug('assert (sentences[' + str(i) + '].begin == ' + str(sentence.begin) + ' and sentences[' + str(
+        #         i) + '].end == ' + str(sentence.end + ')')
         # self.printDetails(sentences, input_str)
-        # print('\n\n'.join(['>{}<'.format(input_str[s.begin:s.end]) for s in sentences]))
+        # logger.debug('\n\n'.join(['>{}<'.format(input_str[s.begin:s.end]) for s in sentences]))
 
 
         nlp = English()
@@ -112,7 +112,7 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
         doc = nlp(input_str)
         sents = [s for s in doc.sents]
         for sent in sents:
-            print('>' + str(sent) + '<\n\n')
+            logger.debug('>' + str(sent) + '<\n\n')
 
         # SpaCy has no control of sentence end. Thus, it ends up with sloppy ends.
         assert (sents[1].text == 'Ms. ABCD is a 69-year-old lady, who was admitted to the hospital with'

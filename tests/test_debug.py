@@ -18,17 +18,17 @@ def test_whitespace_edge_split():
     doc = nlp(text_whitespace)
     # Try to get the actual span function from RuSH
     spans=sentencizer.rush.segToSentenceSpans(text_whitespace)
-    logger.info('Print rush segmented spans: \n----------------\n')
-    logger.info(f"Spans: {[(span.begin, span.end) for span in spans]}\n----------------\n")
-    logger.info(f'Print token offsets: ')
-    logger.info(f'{[(t, t.idx) for t in doc]}')
+    logger.debug('Print rush segmented spans: \n----------------\n')
+    logger.debug(f"Spans: {[(span.begin, span.end) for span in spans]}\n----------------\n")
+    logger.debug(f'Print token offsets: ')
+    logger.debug(f'{[(t, t.idx) for t in doc]}')
     doc_guesses = sentencizer.predict([doc])[0]
-    logger.info(f"doc_guesses: {doc_guesses}")
+    logger.debug(f"doc_guesses: {doc_guesses}")
     serialized = [(str(d), l) for d, l in zip(list(doc), doc_guesses)]
-    logger.info(f"Serialized: {serialized}")
+    logger.debug(f"Serialized: {serialized}")
     # Adjusted expected output to match spacy tokenization
     goal = [("First", True), ("sentence", False), (".", False), ("  ", True), ("Second", True), ("sentence", False), ("before", True), ("spaces", False), (".", False), ("\n", True), ("Third", True), ("sentence", False), ("after", False), ("newline", True), (".", False)]
-    logger.info(f"Goal: {goal}")
+    logger.debug(f"Goal: {goal}")
     for s, g in zip(serialized, goal):
-        logger.info(f'{s} == {g}' if s==g else f'{s} != {g}')
-        assert (s == g)
+        logger.debug(f'{s} == {g}' if s == g else f'{s} != {g}')
+        assert s == g
