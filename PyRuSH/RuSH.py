@@ -27,8 +27,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-import logging.config
+from loguru import logger
 import os.path
 from typing import Union, List
 
@@ -40,40 +39,7 @@ END = 'stend'
 
 
 def initLogger():
-    config_files = ['../../../conf/logging.ini', '../../conf/logging.ini', '../conf/logging.ini', 'conf/logging.ini',
-                    'logging.ini']
-    config_file = None
-    for f in config_files:
-        if os.path.isfile(f):
-            config_file = f
-            break
-    if config_file is None:
-        config_file = config_files[-1]
-        with open(config_file, 'w') as f:
-            f.write('''[loggers]
-keys=root
-
-[handlers]
-keys=consoleHandler
-
-[formatters]
-keys=simpleFormatter
-
-[logger_root]
-level=WARNING
-handlers=consoleHandler
-
-[handler_consoleHandler]
-class=StreamHandler
-level=WARNING
-formatter=simpleFormatter
-args=(sys.stdout,)
-
-[formatter_simpleFormatter]
-format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
-datefmt=
-''')
-    logging.config.fileConfig(config_file)
+    pass  # Removed: logging config logic for Loguru migration
 
 
 class RuSH:
@@ -84,9 +50,7 @@ class RuSH:
         self.fastner = FastCNER(rules, max_repeat)
         self.fastner.span_compare_method = 'scorewidth'
         if enable_logger:
-            initLogger()
-            self.logger = logging.getLogger(__name__)
-            print(self.logger.level)
+            self.logger = logger
         else:
             self.logger = None
         self.auto_fix_gaps = auto_fix_gaps
@@ -109,13 +73,13 @@ class RuSH:
         self.fastner.process(text, 0, result)
 
         # log important message for debugging use
-        if self.logger is not None and self.logger.isEnabledFor(logging.DEBUG):
+        if self.logger is not None:
             text = text.replace('\n', ' ')
             for concept_type, spans in result.items():
-                self.logger.debug(concept_type)
+                self.logger.opt(lazy=True).debug(concept_type)
                 for span in spans:
                     rule = self.fastner.rule_store[span.rule_id]
-                    self.logger.debug(
+                    self.logger.opt(lazy=True).debug(
                         '\t{0}-{1}:{2}\t{3}<{4}>\t[Rule {5}:\t{6}\t{7}\t{8}\t{9}]'.format(span.begin, span.end,
                                                                                           span.score,
                                                                                           text[:span.begin],
@@ -185,15 +149,15 @@ class RuSH:
                 if trimed_gap is not None and trimed_gap.width > self.min_sent_chars:
                     output.append(trimed_gap)
 
-        if self.logger is not None and self.logger.isEnabledFor(logging.DEBUG):
+        if self.logger is not None:
             for sentence in output:
-                self.logger.debug(
+                self.logger.opt(lazy=True).debug(
                     'Sentence({0}-{1}):\t>{2}<'.format(sentence.begin, sentence.end, text[sentence.begin:sentence.end]))
 
         return output
 
     @staticmethod
-    def fix_gap(sentences: [], text: str, previous_end: int, this_begin: int, min_sent_chars: int = 5):
+    def fix_gap(sentences: list, text: str, previous_end: int, this_begin: int, min_sent_chars: int = 5):
         trimed_gap = RuSH.trim_gap(text, previous_end, this_begin)
         if trimed_gap is None:
             return
@@ -203,7 +167,7 @@ class RuSH:
             sentences[-1].end = trimed_gap.end
 
     @staticmethod
-    def trim_gap(text: str, previous_end: int, this_begin: int) -> Span:
+    def trim_gap(text: str, previous_end: int, this_begin: int) -> 'Span | None':
         begin = -1
         alnum_begin = -1
         end = 0
