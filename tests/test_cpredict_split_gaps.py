@@ -28,12 +28,21 @@ def test_split_gaps_single_token():
     guesses = cpredict_split_gaps([doc], dummy_sentencizer_fun)
     starts = [i for i, v in enumerate(guesses[0]) if v]
     assert starts == [0]
+    # Verify split sentence length
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_single_period():
     doc = make_doc_from_text(".")
     guesses = cpredict_split_gaps([doc], dummy_sentencizer_fun)
     starts = [i for i, v in enumerate(guesses[0]) if v]
     assert starts == [0]
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_consecutive_periods():
     doc = make_doc_from_text("Hello..World.")
@@ -42,6 +51,10 @@ def test_split_gaps_consecutive_periods():
     # Should mark the first token and after each period
     assert starts[0] == 0
     assert len(starts) >= 2
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_long_sentence_no_period():
     doc = make_doc_from_text("A " * 100)
@@ -50,6 +63,11 @@ def test_split_gaps_long_sentence_no_period():
     # Should split every ~10 tokens (since each token is 1 char + 1 space)
     assert starts[0] == 0
     assert len(starts) > 1
+    # Check each split sentence is <= 20 tokens
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len <= 20, f"Sentence from {start} to {end} has length {sentence_len} > 20"
 
 def test_split_gaps_non_ascii():
     doc = make_doc_from_text("Hello 世界 . World .")
@@ -64,6 +82,11 @@ def test_split_gaps_non_ascii():
     # Expect sentences to be 'Hello 世界 .' and 'World .'
     assert any("世界" in s for s in sentences)
     assert any("World" in s for s in sentences)
+    # Verify split sentence length
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_punctuation_only():
     doc = make_doc_from_text("!!! . ??? .")
@@ -71,6 +94,10 @@ def test_split_gaps_punctuation_only():
     starts = [i for i, v in enumerate(guesses[0]) if v]
     assert starts[0] == 0
     assert len(starts) > 1
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_basic():
     doc = make_doc_from_text("This is a sentence. This is another one.")
@@ -83,12 +110,21 @@ def test_split_gaps_basic():
     logger.debug(f"[test_split_gaps_basic] Split sentences: {sentences}")
     assert "This is a sentence ." in sentences
     assert "This is another one ." in sentences
+    # Verify split sentence length
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_max_length_none():
     doc = make_doc_from_text("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z.")
     guesses = cpredict_split_gaps([doc], dummy_sentencizer_fun, None)
     starts = [i for i, v in enumerate(guesses[0]) if v]
     assert starts == [0]
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_max_length_set():
     doc = make_doc_from_text("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z.")
@@ -96,6 +132,13 @@ def test_split_gaps_max_length_set():
     starts = [i for i, v in enumerate(guesses[0]) if v]
     assert starts[0] == 0
     assert len(starts) > 1
+    # Check each split sentence is <= 10 characters
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_text = "".join([doc[i].text_with_ws for i in range(start, end)])
+        char_len = len(sentence_text)
+        logger.debug(f"[test_split_gaps_max_length_set] Sentence from {start} to {end} has char length {char_len}")
+        assert char_len <= 10, f"Sentence from {start} to {end} has char length {char_len} > 10"
 
 def test_split_gaps_empty_doc():
     doc = make_doc_from_text("")
@@ -114,6 +157,10 @@ def test_split_gaps_whitespace_none():
     logger.debug(f"[test_split_gaps_whitespace_none] Split sentences: {sentences}")
     # Should have two sentences, each with a single period
     assert sentences == [".", "."]
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_whitespace_set():
     doc = make_doc_from_text("   .   .")
@@ -126,6 +173,10 @@ def test_split_gaps_whitespace_set():
     sentences = [s.strip() for s in sentences]
     logger.debug(f"[test_split_gaps_whitespace_set] Split sentences: {sentences}")
     assert sentences == [".", "."]
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
 
 def test_split_gaps_mixed_whitespace_and_text():
     doc = make_doc_from_text("   . Hello .   . World .")
@@ -141,3 +192,7 @@ def test_split_gaps_mixed_whitespace_and_text():
     assert "." in sentences
     assert "Hello ." in sentences
     assert "World ." in sentences
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
+        sentence_len = end - start
+        assert sentence_len > 0
