@@ -7,3 +7,4 @@ quicksectx>=0.3.5
 pytest
 numpy
 wheel
+loguru
