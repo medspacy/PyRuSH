@@ -10,7 +10,7 @@ def test_whitespace_edge_split():
     text_whitespace = "First sentence.   Second sentence before spaces.\nThird sentence after newline."
     nlp = English()
     nlp.add_pipe("medspacy_pyrush", config={
-        "rules_path": "tests/rush_rules.tsv",
+        "rules_path": "conf/rush_rules.tsv",
         "merge_gaps": False,
         "max_sentence_length": 20
     })
