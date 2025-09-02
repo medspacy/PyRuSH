@@ -52,3 +52,16 @@ Start from version 1.0.3, PyRuSH adds Spacy compatible Sentencizer component: Py
 A Colab Notebook Demo
 ---------------------------
 Feel free to try this runnable `Colab notebook Demo <https://colab.research.google.com/drive/1gX9MzZTQiPw8G3x_vUwZbiSXGtbI0uIX?usp=sharing>`_
+
+Revision History
+----------------
+
+**1.0.11 (2025-09-02)**
+
+- Improved sentence splitting logic: Sentences are now split at the last token before exceeding the max length, ensuring no chunk exceeds the specified limit.
+- Edge case handling: Trailing whitespaces (caused by spacy sentence labeling mechanism) can be optionally split into a separate sentence (merge_gaps=False) to avoid necessarily long sentences.
+
+**1.0.9 (2024-10-27)**
+
+- Initial release with spaCy 3.x compatibility and core RuSH logic.
+- Added Spacy-compatible PyRuSHSentencizer component.
