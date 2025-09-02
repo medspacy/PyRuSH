@@ -30,14 +30,16 @@ cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
         t = 0
         span_idx = 0
         num_spans = len(spans)
-        sentence_len = 0
+        sentence_start_t = 0
+        last_ws_token = None
         while t < len(doc):
             token = doc[t]
             # 1. Mark token as sentence start if it overlaps with RuSH span.begin
             if span_idx < num_spans and token.idx == spans[span_idx].begin:
                 doc_guesses[t] = True
                 logger.debug(f"[doc {doc_idx}] Mark sentence start at token {t}: '{token.text}' idx={token.idx} (span begin)")
-                sentence_len = len(token.text)
+                sentence_start_t = t
+                last_ws_token = None
                 span = spans[span_idx]
                 # Find last token in span
                 last_token_in_span = t
@@ -78,33 +80,26 @@ cpdef cpredict_merge_gaps(docs, sentencizer_fun, max_sentence_length=None):
                             break
                 t = gap_end
                 continue
-            # 3. Enhanced max_sentence_length logic: check current token + next whitespace token
+            # 3. Split at last whitespace or previous token BEFORE exceeding max length
             if max_sentence_length is not None:
-                next_ws_len = 0
-                if t + 1 < len(doc) and doc[t + 1].text.isspace():
-                    next_ws_len = len(doc[t + 1].text)
-                # If current token itself would exceed max_sentence_length, split here
-                if sentence_len + len(token.text) > max_sentence_length:
-                    doc_guesses[t] = True
-                    logger.debug(f"[doc {doc_idx}] Mark/Split due to max_sentence_length at token {t}: '{token.text}' idx={token.idx} (current token exceeds limit)")
-                    sentence_len = len(token.text)
-                    t += 1
+                sentence_len = 0
+                last_ws_token = -1
+                for k in range(sentence_start_t, t):
+                    sentence_len += len(doc[k].text)
+                    if doc[k].text.isspace():
+                        last_ws_token = k
+                current_token_len = len(token.text)
+                # If adding current token would exceed max length
+                if sentence_len + current_token_len > max_sentence_length:
+                    # Find split point: last whitespace before limit, else previous token
+                    split_token = last_ws_token if last_ws_token >= sentence_start_t else t-1 if t > sentence_start_t else t
+                    # Prevent split_token from being the same as sentence_start_t (in case no whitespace and only one token)
+                    if split_token == sentence_start_t and t > sentence_start_t:
+                        split_token = t-1
+                    doc_guesses[split_token] = True
+                    logger.debug(f"[doc {doc_idx}] Mark/Split due to max_sentence_length at token {split_token}: '{doc[split_token].text}' idx={doc[split_token].idx} (split before exceeding limit)")
+                    sentence_start_t = split_token
                     continue
-                # If next whitespace token would push over the limit, split here
-                if next_ws_len > 0 and sentence_len + len(token.text) + next_ws_len > max_sentence_length:
-                    doc_guesses[t] = True
-                    logger.debug(f"[doc {doc_idx}] Mark/Split due to max_sentence_length at token {t}: '{token.text}' idx={token.idx} (next whitespace would exceed limit)")
-                    sentence_len = len(token.text)
-                    t += 1
-                    continue
-                # If next token is not whitespace and would push over the limit, split here
-                if t + 1 < len(doc) and not doc[t + 1].text.isspace() and sentence_len + len(token.text) + len(doc[t + 1].text) > max_sentence_length:
-                    doc_guesses[t] = True
-                    logger.debug(f"[doc {doc_idx}] Mark/Split due to max_sentence_length at token {t}: '{token.text}' idx={token.idx} (next non-whitespace would exceed limit)")
-                    sentence_len = len(token.text)
-                    t += 1
-                    continue
-            sentence_len += len(token.text)
             t += 1
         logger.debug(f"[doc {doc_idx}] Sentence start guesses: {[i for i, v in enumerate(doc_guesses) if v]}")
         guesses.append(doc_guesses)

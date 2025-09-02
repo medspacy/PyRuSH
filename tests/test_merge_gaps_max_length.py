@@ -88,10 +88,12 @@ def test_merge_gaps_max_length():
     assert guesses[0].count(True) > 1
     starts = [i for i, v in enumerate(guesses[0]) if v]
     for idx, start in enumerate(starts):
-        end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
-        sentence_text = "".join([doc[i].text_with_ws for i in range(start, end)])
+        last_token_idx = starts[idx + 1] - 1 if idx + 1 < len(starts) else len(doc) - 1
+        end_offset = doc[last_token_idx].idx + len(doc[last_token_idx])
+        sentence_text = doc.text[doc[start].idx:end_offset]
         char_len = len(sentence_text)
-        assert char_len <= max_len, f"Sentence from {start} to {end} has char length {char_len} > {max_len}"
+        logger.debug(f'{sentence_text} --- length: {char_len}')
+        assert char_len <= max_len, f"Sentence from {start} to {last_token_idx} has char length {char_len} > {max_len}"
 
 def test_merge_gaps_whitespace_edge():
     nlp = spacy.blank('en')
@@ -105,6 +107,13 @@ def test_merge_gaps_whitespace_edge():
     starts = [i for i, v in enumerate(guesses[0]) if v]
     for idx, start in enumerate(starts):
         end = starts[idx + 1] if idx + 1 < len(starts) else len(doc)
-        sentence_text = "".join([doc[i].text_with_ws for i in range(start, end)])
+        # Find last non-whitespace token in the chunk
+        last_token_idx = end - 1
+        while last_token_idx >= start and doc[last_token_idx].text.isspace():
+            last_token_idx -= 1
+        if last_token_idx < start:
+            continue  # skip empty chunk
+        end_offset = doc[last_token_idx].idx + len(doc[last_token_idx])
+        sentence_text = doc.text[doc[start].idx:end_offset]
         char_len = len(sentence_text)
-        assert char_len <= 15, f"Sentence from {start} to {end} has char length {char_len} > 15"
+        assert char_len <= 15, f"Sentence from {start} to {last_token_idx} has char length {char_len} > 15"
