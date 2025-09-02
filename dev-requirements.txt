@@ -8,3 +8,4 @@ pytest
 numpy
 wheel
 loguru
+medspacy
