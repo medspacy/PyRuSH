@@ -10,7 +10,7 @@ from spacy.lang.en import English
 class TestRuSH(unittest.TestCase):
 
     def setUp(self):
-        pwd = os.path.dirname(os.path.abspath(__file__))
+        self.pwd = os.path.dirname(os.path.abspath(__file__))
 
     def test_doc(self):
         nlp = English()
@@ -51,7 +51,7 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
  End Ezoic - MTSam Sample Bottom Matched Content - native_bottom
 '''
         nlp = English()
-        nlp.add_pipe("medspacy_pyrush")
+        nlp.add_pipe("medspacy_pyrush", config={"rules_path": os.path.join(self.pwd, 'rush_rules.tsv')})
         doc = nlp(input_str)
         sents = [s for s in doc.sents]
         for sent in sents:
@@ -74,7 +74,7 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
         from loguru import logger
         logger.add(sys.stdout, level="DEBUG")
         nlp = English()
-        nlp.add_pipe("medspacy_pyrush")
+        nlp.add_pipe("medspacy_pyrush", config={"rules_path": os.path.join(self.pwd, 'rush_rules.tsv')})
         doc = nlp(input_str)
         sents = [s for s in doc.sents]
         for sent in sents:
@@ -117,3 +117,4 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
         # SpaCy has no control of sentence end. Thus, it ends up with sloppy ends.
         assert (sents[1].text == 'Ms. ABCD is a 69-year-old lady, who was admitted to the hospital with'
                                  ' chest pain and respiratory insufficiency.')
+                
