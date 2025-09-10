@@ -22,13 +22,12 @@ jobs:
         # Github Actions doesn't support pairing matrix values together, let's improvise
         # https://github.com/github/feedback/discussions/7835#discussioncomment-1769026
         buildplat:
-          - [ ubuntu-20.04, ubuntu-20.04 ]
-          - [ macos-12, macosx_12 ]
-          - [ windows-2019, windows-2019 ]
-          - [ windows-2022, windows-2022 ]
+          - [ ubuntu-latest, ubuntu-latest ]
+          - [ macos-latest, macosx_latest ]
+          - [ windows-latest, windows-latest ]
         #        spacy doesn't compile win32
         #        python: ["cp36"] # Note: Wheels not needed for PyPy
-        python-version: [ "3.6", "3.7", "3.8", "3.9","3.10.x","3.11.x", "3.12"] # Note: Wheels not needed for PyPy
+        python-version: [ "3.9","3.10.x","3.11.x", "3.12"] # Note: Wheels not needed for PyPy
     timeout-minutes: 45
     steps:
       - name: Checkout
