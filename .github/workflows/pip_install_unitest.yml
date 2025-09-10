@@ -43,9 +43,9 @@ jobs:
     - name: Install prereleased PyRuSH
       if: ${{ github.event.inputs.install_prerelease == 'true' }} 
       run: |
-        # use this to avoid install prereleases of dependencies packages
+        # use this to avoid install prereleases of dependencies packages        
+        pip install --pre PyRuSH
         pip install -r dev-requirements.txt
-        pip install --pre -I PyRuSH
 
     - name: Install formal released medspacy
       if: ${{ github.event.inputs.install_prerelease == 'false' }}  
