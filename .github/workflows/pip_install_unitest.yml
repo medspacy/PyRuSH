@@ -45,12 +45,12 @@ jobs:
       run: |
         # use this to avoid install prereleases of dependencies packages
         pip install -r dev-requirements.txt
-        pip install --pre PyRuSH
+        pip install --pre -I PyRuSH
 
     - name: Install formal released medspacy
       if: ${{ github.event.inputs.install_prerelease == 'false' }}  
       run: |
-        pip install PyRuSH
+        pip install -I PyRuSH
 
 
     - name: tests
