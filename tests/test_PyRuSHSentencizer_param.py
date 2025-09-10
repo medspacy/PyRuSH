@@ -6,7 +6,7 @@ from PyRuSH.PyRuSHSentencizer import PyRuSHSentencizer
 text_short = "Sentence one. Sentence two!"
 text_long = "This is a very long sentence that should be split at whitespace before the max length is reached. " * 5
 text_whitespace = "First sentence.    Second sentence after spaces.\nThird sentence after newline."
-rule_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "conf", "rush_rules.tsv")
+rule_path = os.path.join(os.path.dirname(__file__), "rush_rules.tsv")
 
 def make_nlp(merge_gaps, max_sentence_length):
     nlp = English()
