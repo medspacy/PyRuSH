@@ -20,7 +20,7 @@
 
 #stbegin is the marker for sentence begin, the span of sentence will start at the begin of the captured group
 #stbegin has two scores 0, 1: 0 for true sentence begin clues, 1 for false sentence begin clues which will overwrite 0-scored rules when they are overlapping.
-#stend is the marker for sentence end, the span of sentence will end at the end of the captured group
+#stend is the marker for sentence begin, the span of sentence will end at the end of the captured group
 #stend also has two scores 2, 3: 2 for true sentence end clues, 3 for false sentence end clues which will overwrite 2-scored rules when they are overlapping
 
 # \b the begin of an input
@@ -47,12 +47,6 @@
 \b\s+(\C	0	stbegin
 \b\s+(\d	0	stbegin
 \c.\s+(\C)	0	stbegin
-Dr.\s+(\C)	1	stbegin
-Mr.\s+(\C)	1	stbegin
-Ms.\s+(\C)	1	stbegin
-Miss.\s+(\C)	1	stbegin
-Mrs.\s+(\C)	1	stbegin
-dr.\s+(\C)	1	stbegin
  mL.\s+(\C)	0	stbegin
 *)	1	stbegin
 \c\c.\s+(\C)	0	stbegin
@@ -245,7 +239,7 @@ dr.\s+(\C)	1	stbegin
 \n(? \C	0	stbegin
 \n(? \c	0	stbegin
 \n(. \C	0	stbegin
-\n(\+ \C	0	stbegin
+\n(+ \C	0	stbegin
 \n(/ \C	0	stbegin
 \n+\d\d-\d\d\s+(\C	0	stbegin
 \n+\d+-\d\d-\d\d\s+(\C	0	stbegin

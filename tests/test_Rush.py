@@ -95,7 +95,7 @@ class TestRuSH(unittest.TestCase):
         sentences = rush.segToSentenceSpans(input_str)
         self.printDetails(sentences, input_str)
 
-    def test_doc2(self):
+    def test8(self):
         input_str = '''  
 9.  Advair b.i.d.
 10.  Xopenex q.i.d. and p.r.n.
@@ -109,12 +109,44 @@ I will see her in a month to six weeks.  She is to follow up with Dr. X before t
         sent = sentences[1]
         assert (input_str[sent.begin:sent.end] == '10.  Xopenex q.i.d. and p.r.n.')
 
-
-    def test_doc11(self):
+    def test9(self):
         input_str='  This is a sentence. This is another sentence.'
-        sentences=self.rush.segToSentenceSpans(input_str)
-        for sent in sentences:
-            print('>' + input_str[sent.begin:sent.end] + '<\n')
+        self.rush = RuSH(str(os.path.join(self.pwd, 'rush_rules.tsv')), min_sent_chars=2, enable_logger=True)
+        sentences = self.rush.segToSentenceSpans(input_str)
+        self.printDetails(sentences, input_str)
+
+    def test10(self):
+        input_str='''Ms. [**Known patient lastname 2004**] was admitted on [**2573-5-30**]. Ultrasound
+at the time of admission demonstrated pancreatic duct dilitation and
+edematous gallbladder. She was admitted to the ICU.
+Discharge Medications:
+1. Miconazole Nitrate 2 % Powder Sig: One (1) Appl Topical  BID
+(2 times a day) as needed.
+2. Heparin Sodium (Porcine) 5,000 unit/mL Solution Sig: One (1)
+Injection TID (3 times a day).
+3. Acetaminophen 160 mg/5 mL Elixir Sig: One (1)  PO Q4-6H
+(every 4 to 6 hours) as needed.'''
+        self.rush = RuSH(str(os.path.join(self.pwd, 'rush_rules.tsv')), min_sent_chars=2, enable_logger=True)
+        sentences = self.rush.segToSentenceSpans(input_str)
+        self.printDetails(sentences, input_str)
+        assert (sentences[0].begin == 0 and sentences[0].end == 173)
+        assert (sentences[1].begin == 174 and sentences[1].end == 202)
+        assert (sentences[2].begin == 203 and sentences[2].end == 225)
+        assert (sentences[3].begin == 226 and sentences[3].end == 258)
+        assert (sentences[4].begin == 259 and sentences[4].end == 316)
+        assert (sentences[5].begin == 317 and sentences[5].end == 367)
+        assert (sentences[6].begin == 368 and sentences[6].end == 411)
+        assert (sentences[7].begin == 412 and sentences[7].end == 447)
+        assert (sentences[8].begin == 448 and sentences[8].end == 502)
+
+    def test11(self):
+        input_str = '''Patient doesn't have heart disease or high blood pressure, but their dad did have
+diabetes. Pt is a 63M w/ h/o metastatic carcinoid tumor, HTN and hyperlipidemia.'''
+        self.rush = RuSH(str(os.path.join(self.pwd, 'rush_rules.tsv')), min_sent_chars=2, enable_logger=True)
+        sentences = self.rush.segToSentenceSpans(input_str)
+        self.printDetails(sentences, input_str)
+        assert (sentences[0].begin == 0 and sentences[0].end == 91)
+        assert (sentences[1].begin == 92 and sentences[1].end == 162)
 
 if __name__ == '__main__':
     unittest.main()
