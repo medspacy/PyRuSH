@@ -17,7 +17,7 @@
 # ******************************************************************************
 from spacy import Language
 from spacy.pipeline import Sentencizer
-
+from typing import Optional
 from .RuSH import RuSH
 from .StaticSentencizerFun import cpredict_merge_gaps,cpredict_split_gaps, cset_annotations
 
@@ -25,7 +25,7 @@ from .StaticSentencizerFun import cpredict_merge_gaps,cpredict_split_gaps, cset_
 @Language.factory("medspacy_pyrush")
 class PyRuSHSentencizer(Sentencizer):
     def __init__(self, nlp: Language, name: str = "medspacy_pyrush", rules_path: str = '', max_repeat: int = 50,
-                 auto_fix_gaps: bool = True, merge_gaps: bool = False, max_sentence_length: int = None) -> Sentencizer:
+                 auto_fix_gaps: bool = True, merge_gaps: bool = False, max_sentence_length: Optional[int] = None) -> Sentencizer:
         """
         Initialize the PyRuSH sentencizer component.
 
